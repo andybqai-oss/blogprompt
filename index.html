@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#1a1208"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="BlogPrompt+"/>
+  <meta name="description" content="Auto Blog Content Director for The Executive Hobo"/>
+  <title>BlogPrompt+ | The Executive Hobo</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" href="icons/icon-192.png"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Special+Elite&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #1a1208;
+      --paper: #f5f0e8;
+      --aged: #e8dfc8;
+      --rust: #8b3a1a;
+      --brass: #b8922a;
+      --lead: #4a4540;
+      --ghost: #9a9088;
+      --cream: #faf7f0;
+      --red: #c0392b;
+      --green: #2d6a2d;
+    }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+    body {
+      background: var(--aged);
+      font-family: 'Libre Baskerville', Georgia, serif;
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ── MASTHEAD ── */
+    #masthead {
+      background: var(--ink);
+      color: var(--paper);
+      text-align: center;
+      padding: 10px 16px 7px;
+      border-bottom: 3px double var(--brass);
+      flex-shrink: 0;
+    }
+    #masthead h1 {
+      font-family: 'UnifrakturMaguntia', cursive;
+      font-size: 1.9rem;
+      color: var(--brass);
+      line-height: 1;
+    }
+    #masthead .sub {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 3px;
+      color: var(--ghost);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    #masthead .dateline {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.6rem;
+      color: var(--brass);
+      opacity: 0.8;
+      margin-top: 3px;
+    }
+    #online-badge {
+      display: inline-block;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.55rem;
+      padding: 1px 6px;
+      border-radius: 8px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    #online-badge.online { background: var(--green); color: #fff; }
+    #online-badge.offline { background: var(--rust); color: #fff; }
+
+    /* ── TABS ── */
+    #tabs {
+      display: flex;
+      background: var(--ink);
+      border-bottom: 2px solid var(--brass);
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 8px 2px;
+      font-family: 'Special Elite', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--ghost);
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      cursor: pointer;
+      position: relative;
+    }
+    .tab-btn.active { color: var(--brass); border-bottom-color: var(--brass); }
+    .badge {
+      display: inline-block;
+      background: var(--rust);
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.45rem;
+      padding: 0 3px;
+      margin-left: 1px;
+      vertical-align: top;
+    }
+
+    /* ── SCROLL AREA ── */
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 70px;
+    }
+
+    /* ── PANELS ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── QUERY ALERT ── */
+    .query-alert {
+      margin: 12px;
+      background: var(--cream);
+      border: 1px solid var(--ink);
+      border-left: 5px solid var(--rust);
+      padding: 14px;
+      box-shadow: 3px 3px 0 var(--ink);
+      animation: slideIn 0.35s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-16px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .query-label {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 6px;
+    }
+    .query-text {
+      font-style: italic;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .query-input {
+      width: 100%;
+      font-family: 'Special Elite', monospace;
+      font-size: 0.85rem;
+      background: var(--paper);
+      border: 1px solid var(--lead);
+      padding: 8px;
+      color: var(--ink);
+      resize: vertical;
+      min-height: 70px;
+      line-height: 1.5;
+    }
+    .query-input:focus { outline: 2px solid var(--brass); }
+
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 8px; margin-top: 8px; }
+    .btn {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 9px 14px;
+      border: 1px solid var(--ink);
+      cursor: pointer;
+      flex: 1;
+    }
+    .btn-primary { background: var(--ink); color: var(--brass); }
+    .btn-secondary { background: transparent; color: var(--lead); }
+    .btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
+    .btn-full { width: 100%; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── SECTIONS ── */
+    .section { padding: 12px; }
+    .section-head {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--ghost);
+      border-bottom: 1px solid var(--lead);
+      padding-bottom: 4px;
+      margin-bottom: 10px;
+    }
+
+    /* ── ENTRY CARDS ── */
+    .entry-card {
+      background: var(--cream);
+      border: 1px solid rgba(26,18,8,0.18);
+      border-left: 3px solid var(--brass);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    .entry-time {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.58rem;
+      color: var(--ghost);
+      margin-bottom: 3px;
+    }
+    .entry-cat {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.52rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      float: right;
+      margin-top: -16px;
+    }
+    .entry-q {
+      font-style: italic;
+      font-size: 0.75rem;
+      color: var(--lead);
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .entry-a { font-size: 0.85rem; line-height: 1.5; }
+
+    /* ── QUICK LOG ── */
+    .cat-pills { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .cat-pill {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.6rem;
+      padding: 4px 10px;
+      border: 1px solid var(--lead);
+      background: transparent;
+      color: var(--lead);
+      cursor: pointer;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .cat-pill.selected { background: var(--ink); color: var(--brass); border-color: var(--ink); }
+    .quick-input {
+      width: 100%;
+      font-family: 'Special Elite', monospace;
+      font-size: 0.85rem;
+      background: var(--cream);
+      border: 1px solid var(--lead);
+      border-bottom: 2px solid var(--ink);
+      padding: 10px;
+      color: var(--ink);
+      resize: none;
+      min-height: 70px;
+    }
+    .quick-input:focus { outline: 2px solid var(--brass); }
+
+    /* ── MINDMAP ── */
+    .entity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .entity-group {
+      background: var(--cream);
+      border: 1px solid rgba(26,18,8,0.18);
+      padding: 10px;
+    }
+    .entity-group-title {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 6px;
+      border-bottom: 1px dotted var(--lead);
+      padding-bottom: 3px;
+    }
+    .entity-tag {
+      display: inline-block;
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.62rem;
+      background: var(--ink);
+      color: var(--brass);
+      padding: 2px 6px;
+      margin: 2px 2px 2px 0;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    /* ── BLOG DRAFT ── */
+    #blog-preview {
+      background: var(--cream);
+      border: 1px solid var(--ink);
+      padding: 16px;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      margin-bottom: 12px;
+      min-height: 180px;
+    }
+    #blog-preview[contenteditable="true"] { outline: 2px solid var(--brass); }
+    .generating {
+      padding: 24px;
+      font-family: 'Special Elite', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--rust);
+      text-align: center;
+    }
+    @keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:1} }
+    .dot { animation: blink 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ── SETTINGS ── */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px dotted rgba(26,18,8,0.18);
+    }
+    .setting-label { font-size: 0.82rem; }
+    .setting-sub { font-family: 'Source Code Pro', monospace; font-size: 0.58rem; color: var(--ghost); margin-top: 2px; }
+    .toggle {
+      width: 44px; height: 24px;
+      background: var(--ghost);
+      border-radius: 12px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      flex-shrink: 0;
+    }
+    .toggle.on { background: var(--rust); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle.on::after { transform: translateX(20px); }
+    input[type=range] { width: 120px; accent-color: var(--rust); }
+    hr.divider { border: none; border-top: 2px solid var(--ink); margin: 12px 0; }
+
+    /* ── TIMER BAR ── */
+    #timer-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--ink);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 200;
+      border-top: 2px solid var(--brass);
+    }
+    #timer-info {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.62rem;
+      color: var(--ghost);
+    }
+    #timer-next { color: var(--brass); font-size: 0.75rem; }
+    #fire-btn {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: var(--rust);
+      color: white;
+      border: none;
+      padding: 7px 14px;
+      cursor: pointer;
+    }
+
+    /* ── INFOBOX ── */
+    .infobox {
+      margin: 12px;
+      background: var(--cream);
+      border: 1px solid var(--ink);
+      padding: 12px;
+    }
+    .tag-inline {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.6rem;
+      background: rgba(184,146,42,0.15);
+      color: var(--brass);
+      padding: 1px 4px;
+      border-radius: 2px;
+    }
+    .empty-state {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.78rem;
+      color: var(--ghost);
+      font-style: italic;
+      padding: 12px 0;
+    }
+
+    /* ── INSTALL BANNER ── */
+    #install-banner {
+      display: none;
+      margin: 12px;
+      background: var(--ink);
+      color: var(--brass);
+      border: 1px solid var(--brass);
+      padding: 12px 14px;
+      font-family: 'Special Elite', monospace;
+      font-size: 0.72rem;
+      line-height: 1.6;
+    }
+    #install-banner .banner-btns { display: flex; gap: 8px; margin-top: 8px; }
+    #install-banner button {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    #do-install { background: var(--brass); color: var(--ink); border: none; }
+    #dismiss-install { background: transparent; color: var(--ghost); border: 1px solid var(--ghost); }
+
+    /* ── SYNC STATUS ── */
+    #sync-status {
+      font-family: 'Source Code Pro', monospace;
+      font-size: 0.58rem;
+      color: var(--ghost);
+      text-align: center;
+      padding: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div id="masthead">
+  <h1>The Executive Hobo</h1>
+  <div class="sub">BlogPrompt+ · Auto Content Director</div>
+  <div class="dateline" id="dateline">Loading...</div>
+</div>
+
+<!-- TABS -->
+<div id="tabs">
+  <button class="tab-btn active" data-tab="today" onclick="switchTab('today')">Today<span class="badge" id="badge-today">0</span></button>
+  <button class="tab-btn" data-tab="query" onclick="switchTab('query')">Query<span class="badge" id="badge-query" style="display:none">!</span></button>
+  <button class="tab-btn" data-tab="log" onclick="switchTab('log')">Log</button>
+  <button class="tab-btn" data-tab="mindmap" onclick="switchTab('mindmap')">Web</button>
+  <button class="tab-btn" data-tab="blog" onclick="switchTab('blog')">Draft</button>
+  <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">⚙</button>
+</div>
+
+<!-- INSTALL BANNER -->
+<div id="install-banner">
+  📲 Add BlogPrompt+ to your home screen for instant access — works offline too.
+  <div class="banner-btns">
+    <button id="do-install">Install App</button>
+    <button id="dismiss-install">Not Now</button>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div id="content">
+
+  <!-- TODAY PANEL -->
+  <div class="panel active" id="panel-today">
+    <div id="pending-query-today"></div>
+
+    <div class="section">
+      <div class="section-head">Quick Note</div>
+      <div class="cat-pills" id="cat-pills"></div>
+      <textarea class="quick-input" id="quick-input" placeholder="Note something down..."></textarea>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-primary" onclick="addManualEntry()">Add Note</button>
+        <button class="btn btn-secondary" onclick="fireQuery()">Fire Query</button>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <div class="section">
+      <div class="section-head" id="entries-head">0 entries today</div>
+      <div id="entries-preview"></div>
+      <button class="btn btn-secondary btn-full" id="view-all-btn" style="display:none;margin-top:4px" onclick="switchTab('log')">View all entries →</button>
+    </div>
+
+    <div class="section" id="gen-btn-wrap" style="display:none">
+      <button class="btn btn-primary btn-full" id="gen-btn" onclick="generateBlog()">Generate Today's Draft</button>
+    </div>
+
+    <div id="sync-status"></div>
+
+    <div class="infobox">
+      <div class="section-head" style="margin-bottom:8px">Today's Fact</div>
+      <div style="font-style:italic;font-size:0.8rem;line-height:1.6;margin-bottom:12px" id="daily-fact"></div>
+      <div class="section-head" style="margin-bottom:8px">Cryptic Clue</div>
+      <div style="font-family:'Special Elite',monospace;font-size:0.78rem;color:var(--rust);line-height:1.5" id="cryptic-clue"></div>
+      <button class="btn btn-secondary" style="margin-top:8px;font-size:0.6rem" onclick="toggleAnswer()">Reveal Answer</button>
+      <div id="cryptic-answer" style="display:none;font-family:'Source Code Pro',monospace;font-size:0.7rem;color:var(--lead);margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- QUERY PANEL -->
+  <div class="panel" id="panel-query">
+    <div id="query-panel-content"></div>
+  </div>
+
+  <!-- LOG PANEL -->
+  <div class="panel" id="panel-log">
+    <div class="section">
+      <div class="section-head" id="log-head">All Entries</div>
+      <div id="log-entries"></div>
+    </div>
+  </div>
+
+  <!-- MINDMAP PANEL -->
+  <div class="panel" id="panel-mindmap">
+    <div class="section">
+      <div class="section-head">Background Database · Spider's Web</div>
+      <div style="font-style:italic;font-size:0.75rem;color:var(--ghost);margin-bottom:12px;line-height:1.5">
+        Everything mentioned — people, places, dates, projects. Tap any tag to prompt a follow-up note.
+      </div>
+      <div class="entity-grid" id="entity-grid"></div>
+      <div id="project-list"></div>
+      <div style="margin-top:16px">
+        <button class="btn btn-secondary btn-full" onclick="fireQuery('backfill')">📜 Fire a Memory/Backfill Query</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOG PANEL -->
+  <div class="panel" id="panel-blog">
+    <div class="section">
+      <div class="section-head" id="blog-head">Draft Entry</div>
+      <div id="blog-generating" style="display:none" class="generating">
+        COMPOSING<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+      </div>
+      <div id="blog-preview" style="display:none"></div>
+      <div id="blog-btns" class="btn-row" style="display:none">
+        <button class="btn btn-primary" id="edit-btn" onclick="toggleEdit()">Edit Draft</button>
+        <button class="btn btn-secondary" onclick="copyDraft()">Copy</button>
+      </div>
+      <button class="btn btn-secondary btn-full" id="regen-btn" style="display:none;margin-top:8px" onclick="generateBlog()">Regenerate</button>
+      <div id="blog-empty" style="padding:20px 0;text-align:center">
+        <div class="empty-state">No draft yet for today</div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="generateBlog()" id="gen-btn2">Generate Draft</button>
+      </div>
+      <div style="font-family:'Special Elite',monospace;font-size:0.65rem;color:var(--ghost);margin-top:12px;line-height:1.6">
+        ⚠ All drafts marked UNAPPROVED. Nothing is auto-posted. Copy and edit before publishing to TEH.
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PANEL -->
+  <div class="panel" id="panel-settings">
+    <div class="section">
+      <div class="section-head">Query Timing</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Min gap</div>
+          <div class="setting-sub" id="min-label">20 mins</div>
+        </div>
+        <input type="range" min="5" max="90" step="5" id="min-slider" oninput="updateSetting('minMins', this.value)"/>
+      </div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Max gap</div>
+          <div class="setting-sub" id="max-label">60 mins</div>
+        </div>
+        <input type="range" min="10" max="180" step="10" id="max-slider" oninput="updateSetting('maxMins', this.value)"/>
+      </div>
+
+      <hr class="divider"/>
+      <div class="section-head">Active Categories</div>
+      <div id="cat-toggles"></div>
+
+      <hr class="divider"/>
+      <div class="section-head">Data & Backup</div>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Connection</div>
+          <div class="setting-sub" id="conn-status">Checking...</div>
+        </div>
+        <span id="online-badge-settings" class="badge">–</span>
+      </div>
+      <div style="font-family:'Libre Baskerville',serif;font-size:0.75rem;color:var(--lead);line-height:1.7;padding:8px 0">
+        All data stored locally on your device (IndexedDB). Survives offline and app restarts. 
+        To back up, use the export button below — save the file to Google Drive manually, or set up auto-sync in a future update.
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-primary" onclick="exportData()">Export Backup</button>
+        <button class="btn btn-secondary" onclick="importData()">Import Backup</button>
+      </div>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)"/>
+
+      <hr class="divider"/>
+      <div class="section-head">Danger Zone</div>
+      <button class="btn btn-danger btn-full" onclick="clearToday()">Clear Today's Entries</button>
+      <button class="btn btn-danger btn-full" style="margin-top:8px" onclick="clearAll()">Clear ALL Data (full reset)</button>
+
+      <hr class="divider"/>
+      <div class="section-head">About</div>
+      <div style="font-family:'Libre Baskerville',serif;font-size:0.75rem;color:var(--lead);line-height:1.7;padding:8px 0">
+        BlogPrompt+ v1.0 · For The Executive Hobo<br/>
+        Fires random queries across the day, builds a background database of people, places, dates and events, then uses Claude AI to ghost-write a diary entry in your voice.<br/><br/>
+        <strong>Nothing auto-posts.</strong> All drafts are marked UNAPPROVED until you copy, edit, and publish them yourself.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- TIMER BAR -->
+<div id="timer-bar">
+  <div id="timer-info">
+    Next query in <span id="timer-next">--:--</span><br/>
+    <span id="timer-sub" style="font-size:0.55rem">0 entries · 0 nodes</span>
+  </div>
+  <button id="fire-btn" onclick="fireQuery()">Fire Now</button>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
+const CAT_LABELS = {
+  phone:    '📱 On-Phone',
+  offphone: '🌍 Off-Phone',
+  online:   '🌐 Online',
+  travel:   '🚶 Travel',
+  backfill: '📜 Memory',
+};
+const CAT_COLORS = {
+  phone: '#2563eb', offphone: '#16a34a',
+  online: '#7c3aed', travel: '#b45309', backfill: '#9f1239',
+};
+
+const QUERY_BANK = {
+  phone: [
+    "What app did you just open and why?",
+    "Any notifications worth noting — message, alert, reminder?",
+    "Did you search for anything just now? What were you looking for?",
+    "Any music, podcast or audio playing?",
+    "Screenshot anything today? What was it?",
+    "Any calls made or received recently? Who, roughly?",
+    "What's the last thing you typed or copy-pasted?",
+    "Any app frustrating you right now?",
+  ],
+  offphone: [
+    "Where are you physically right now — inside, outside, moving?",
+    "Who have you spoken to face-to-face today, even briefly?",
+    "Anything you ate, drank, or are considering?",
+    "What's the weather doing where you are?",
+    "Any physical task or errand completed or in progress?",
+    "Anyone interesting nearby or passing through?",
+    "What noise or sound is in your environment right now?",
+    "Mood check — one word or one sentence.",
+    "Any unexpected event or encounter today?",
+    "What's your current shelter/base situation?",
+  ],
+  online: [
+    "Any website or article grabbed your attention today?",
+    "Anything posted, commented, or shared online today?",
+    "Any email worth logging — sent or received?",
+    "AI chat today — what were you working on?",
+    "Any YouTube or video content consumed?",
+    "Any online purchase or marketplace activity?",
+    "Any project work done online — what moved forward?",
+    "Social media — anything noteworthy?",
+  ],
+  travel: [
+    "What's your current location — town, area, landmark?",
+    "Any travel today — how far, which direction?",
+    "Transport used — foot, bus, train, lift?",
+    "Any delays, cancellations, or unexpected route changes?",
+    "Somewhere new visited today, even briefly?",
+    "Nearest town or city to you right now?",
+    "Any plans to move on — where to, when?",
+    "How long have you been at your current location?",
+  ],
+  backfill: [
+    "Going back a bit — where were you roughly 6 months ago?",
+    "Anyone from your past you've thought about recently?",
+    "A place that was significant to you — can you name it?",
+    "Any event from the last few years that still stands out?",
+    "A person you met on the road — any detail you remember?",
+    "A town or city you spent significant time in — which one?",
+    "Any project or plan from before that never got finished?",
+    "Something you wish you'd written down at the time?",
+  ],
+};
+
+const DAILY_FACTS = [
+  "The word 'salary' comes from Latin 'salarium' — Roman soldiers were sometimes paid in salt.",
+  "A group of flamingos is called a flamboyance.",
+  "The shortest war in history lasted 38–45 minutes: the Anglo-Zanzibar War of 1896.",
+  "Honey never spoils — edible honey has been found in 3,000-year-old Egyptian tombs.",
+  "The Eiffel Tower grows about 15cm taller in summer due to thermal expansion.",
+  "Cleopatra lived closer in time to the Moon landing than to the Great Pyramid's construction.",
+  "A day on Venus is longer than a year on Venus.",
+  "Oxford University is older than the Aztec Empire.",
+  "The 'hashtag' symbol is formally called an octothorpe.",
+  "Wombats produce cube-shaped faeces — the only known animal to do so.",
+  "Scotland's national animal is the unicorn.",
+  "A jiffy is an actual unit of time — 1/100th of a second.",
+  "Crows can recognise human faces and hold grudges.",
+  "The inventor of the frisbee was turned into a frisbee after death — his ashes were pressed into one.",
+  "The average person walks the equivalent of five times around the Earth in their lifetime.",
+];
+
+const CRYPTIC_CLUES = [
+  { clue: "Vagrant writer could find shelter in this — reversed (4)", answer: "TENT" },
+  { clue: "Wanderer's credential — no fixed abode, ironically abbreviated (3)", answer: "NFA" },
+  { clue: "Phone held by one drifting — sounds like moaning quietly (4)", answer: "MOAN" },
+  { clue: "Blog publication, initially executive hobo (3)", answer: "TEH" },
+  { clue: "Temporary address mixed up: 'hotel' without the h (4)", answer: "OTEL→LOTE" },
+  { clue: "Wanderer loses first letter — becomes a type of biscuit (4)", answer: "HOBO→OBO→OREO" },
+  { clue: "Direction the executive always heads — sounds like 'away' (4)", answer: "AWAY" },
+  { clue: "Andy's tool for writing — anagram of UNCLE OP (7)", answer: "PENCOUP" },
+];
+
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let state = {
+  entries: [],
+  entities: { people: [], places: [], dates: [], projects: [] },
+  settings: { minMins: 20, maxMins: 60, cats: {}, apiKey: '' },
+  blogDraft: '',
+  blogEditing: false,
+  pendingQuery: null,
+  currentCat: 'offphone',
+  dailyFact: DAILY_FACTS[Math.floor(Math.random() * DAILY_FACTS.length)],
+  crypticClue: CRYPTIC_CLUES[Math.floor(Math.random() * CRYPTIC_CLUES.length)],
+  answerShown: false,
+};
+
+let timerHandle = null;
+let countdownHandle = null;
+let nextQuerySecs = 0;
+let deferredInstall = null;
+
+// ════════════════════════════════════════════════════════════
+// INDEXEDDB
+// ════════════════════════════════════════════════════════════
+let db;
+function openDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open('blogprompt', 2);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('store')) d.createObjectStore('store');
+    };
+    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onerror = e => rej(e);
+  });
+}
+
+function dbGet(key) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('store', 'readonly');
+    const req = tx.objectStore('store').get(key);
+    req.onsuccess = () => res(req.result);
+    req.onerror = rej;
+  });
+}
+
+function dbSet(key, value) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('store', 'readwrite');
+    const req = tx.objectStore('store').put(value, key);
+    req.onsuccess = () => res();
+    req.onerror = rej;
+  });
+}
+
+function dbDel(key) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction('store', 'readwrite');
+    const req = tx.objectStore('store').delete(key);
+    req.onsuccess = () => res();
+    req.onerror = rej;
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function nowStr() {
+  return new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+}
+function fullDate() {
+  return new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+function randomBetween(a, b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function pickRandom(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function pickCat() {
+  const cats = Object.keys(CAT_LABELS).filter(c => state.settings.cats[c] !== false);
+  return pickRandom(cats.length ? cats : Object.keys(CAT_LABELS));
+}
+function el(id) { return document.getElementById(id); }
+function totalNodes() { return Object.values(state.entities).flat().length; }
+
+// ── Entity extraction
+function extractEntities(text) {
+  const ents = { people: [], places: [], dates: [], projects: [] };
+  if (!text) return ents;
+  const placeHints = ['street','road','lane','avenue','park','town','city','village','bridge','station','centre','center','square','market','hill'];
+  const projectKeywords = ['exechobo','hobo','shopify','carrd','gofundme','amazon','siteground','jotform','teh','ebook','app','site','web','tool','project','build','launch','blog','store'];
+  const words = text.split(/\s+/);
+  words.filter(w => /^[A-Z][a-z]{2,}/.test(w.replace(/[^a-zA-Z]/g,''))).forEach(w => {
+    const lc = w.toLowerCase();
+    if (placeHints.some(h => text.toLowerCase().includes(lc+' '+h) || text.toLowerCase().includes(h+' '+lc)))
+      ents.places.push(w);
+    else ents.people.push(w);
+  });
+  const dm = text.match(/\b(\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?|\d{4}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{1,2}(?:st|nd|rd|th)?(?:,?\s*\d{4})?)\b/gi);
+  if (dm) ents.dates.push(...dm);
+  const tl = text.toLowerCase();
+  projectKeywords.forEach(k => { if (tl.includes(k)) ents.projects.push(k); });
+  Object.keys(ents).forEach(k => { ents[k] = [...new Set(ents[k])].slice(0,30); });
+  return ents;
+}
+
+function mergeEntities(a, b) {
+  const m = { ...a };
+  Object.keys(b).forEach(k => { m[k] = [...new Set([...(m[k]||[]), ...(b[k]||[])])]; });
+  return m;
+}
+
+// ════════════════════════════════════════════════════════════
+// SAVE / LOAD
+// ════════════════════════════════════════════════════════════
+async function save() {
+  const day = todayKey();
+  await dbSet('entries-'+day, state.entries);
+  await dbSet('entities', state.entities);
+  await dbSet('settings', state.settings);
+  if (state.blogDraft) await dbSet('blog-'+day, state.blogDraft);
+  el('sync-status').textContent = 'Saved locally · ' + nowStr();
+}
+
+async function loadData() {
+  const day = todayKey();
+  const entries = await dbGet('entries-'+day);
+  const entities = await dbGet('entities');
+  const settings = await dbGet('settings');
+  const blog = await dbGet('blog-'+day);
+  if (entries) state.entries = entries;
+  if (entities) state.entities = entities;
+  if (settings) state.settings = { ...state.settings, ...settings };
+  if (blog) state.blogDraft = blog;
+}
+
+// ════════════════════════════════════════════════════════════
+// QUERIES
+// ════════════════════════════════════════════════════════════
+function scheduleNext() {
+  clearTimeout(timerHandle);
+  clearInterval(countdownHandle);
+  const secs = randomBetween(state.settings.minMins*60, state.settings.maxMins*60);
+  nextQuerySecs = secs;
+  updateCountdown();
+  countdownHandle = setInterval(() => { nextQuerySecs = Math.max(0, nextQuerySecs-1); updateCountdown(); }, 1000);
+  timerHandle = setTimeout(() => { clearInterval(countdownHandle); fireQuery(); }, secs*1000);
+}
+
+function updateCountdown() {
+  const m = Math.floor(nextQuerySecs/60);
+  const s = nextQuerySecs % 60;
+  el('timer-next').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el('timer-sub').textContent = `${state.entries.length} entries · ${totalNodes()} nodes`;
+}
+
+function fireQuery(cat) {
+  const c = cat || pickCat();
+  const q = pickRandom(QUERY_BANK[c]);
+  state.pendingQuery = { cat: c, q, time: nowStr() };
+  renderPendingQuery();
+  el('badge-query').style.display = 'inline';
+  el('badge-query').textContent = '!';
+  scheduleNext();
+  // vibrate if supported
+  if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+}
+
+function submitAnswer() {
+  const ans = el('query-answer').value.trim();
+  if (!ans || !state.pendingQuery) return;
+  const entry = {
+    id: Date.now(),
+    time: nowStr(),
+    cat: state.pendingQuery.cat,
+    question: state.pendingQuery.q,
+    answer: ans,
+  };
+  state.entries.unshift(entry);
+  state.entities = mergeEntities(state.entities, extractEntities(ans));
+  state.pendingQuery = null;
+  el('badge-query').style.display = 'none';
+  save();
+  renderAll();
+  switchTab('today');
+}
+
+function skipQuery() {
+  state.pendingQuery = null;
+  el('badge-query').style.display = 'none';
+  renderAll();
+  switchTab('today');
+}
+
+// ════════════════════════════════════════════════════════════
+// MANUAL LOG
+// ════════════════════════════════════════════════════════════
+function addManualEntry() {
+  const txt = el('quick-input').value.trim();
+  if (!txt) return;
+  state.entries.unshift({ id: Date.now(), time: nowStr(), cat: state.currentCat, question: 'Manual note', answer: txt, manual: true });
+  state.entities = mergeEntities(state.entities, extractEntities(txt));
+  el('quick-input').value = '';
+  save();
+  renderAll();
+}
+
+// ════════════════════════════════════════════════════════════
+// BLOG GENERATION
+// ════════════════════════════════════════════════════════════
+async function generateBlog() {
+  if (state.entries.length === 0) { alert('Add some entries first!'); return; }
+  switchTab('blog');
+  el('blog-generating').style.display = 'block';
+  el('blog-preview').style.display = 'none';
+  el('blog-btns').style.display = 'none';
+  el('regen-btn').style.display = 'none';
+  el('blog-empty').style.display = 'none';
+
+  const summary = state.entries.slice().reverse()
+    .map(e => `[${e.time}] (${CAT_LABELS[e.cat]}) Q: ${e.question}\nA: ${e.answer}`)
+    .join('\n\n');
+
+  const entitySummary = Object.entries(state.entities)
+    .filter(([,v]) => v.length > 0)
+    .map(([k,v]) => `${k}: ${v.join(', ')}`)
+    .join('\n');
+
+  const prompt = `You are ghostwriting a diary-style blog entry for THE EXECUTIVE HOBO — a homeless man named Andy who is a creative builder, tech experimenter, and lifelong wanderer with 10-12 years on the road. His writing voice: dry wit, self-aware, never self-pitying, sharp observations, working-class intelligence with a philosophical streak. British English throughout.
+
+Today is ${fullDate()}.
+
+Andy's logged moments from today:
+
+${summary}
+
+Background entities database:
+${entitySummary}
+
+Write a blog diary entry (500–700 words) that:
+- Opens with a dateline/location header (use whatever location is mentioned, or 'Location undisclosed')
+- Weaves the day's events into a readable narrative — don't just list them
+- Maintains Andy's voice throughout
+- Includes natural reflection on the day
+- Ends with:
+  "— Today's Fact: ${state.dailyFact}"
+  "— Today's Cryptic: ${state.crypticClue.clue}"
+- Mark the very top clearly: [DRAFT — UNAPPROVED — NOT FOR POSTING]
+- Do NOT invent specific facts not mentioned in the notes
+- Do NOT be sycophantic or over-dramatic`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    state.blogDraft = data.content?.map(b => b.text||'').join('') || 'Generation failed — check connection.';
+  } catch(e) {
+    state.blogDraft = navigator.onLine
+      ? 'API error. Check your connection and try again.'
+      : 'Offline — draft generation requires internet. Your entries are saved; try again when connected.';
+  }
+
+  el('blog-generating').style.display = 'none';
+  renderBlog();
+  save();
+}
+
+function toggleEdit() {
+  state.blogEditing = !state.blogEditing;
+  const p = el('blog-preview');
+  p.contentEditable = state.blogEditing;
+  el('edit-btn').textContent = state.blogEditing ? 'Done Editing' : 'Edit Draft';
+  if (!state.blogEditing) {
+    state.blogDraft = p.innerText;
+    save();
+  }
+}
+
+function copyDraft() {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(state.blogDraft).then(() => alert('Draft copied to clipboard.'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = state.blogDraft;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('Draft copied.');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════════════════════
+function renderAll() {
+  renderDateline();
+  renderCatPills();
+  renderPendingQuery();
+  renderEntries();
+  renderLog();
+  renderMindmap();
+  renderBlog();
+  renderSettings();
+  renderCatToggles();
+  updateCountdown();
+}
+
+function renderDateline() {
+  el('dateline').innerHTML = fullDate() + ' <span id="online-badge" class="' + (navigator.onLine?'online':'offline') + '">' + (navigator.onLine?'ONLINE':'OFFLINE') + '</span>';
+}
+
+function renderCatPills() {
+  el('cat-pills').innerHTML = Object.entries(CAT_LABELS).map(([k,v]) =>
+    `<button class="cat-pill${state.currentCat===k?' selected':''}" onclick="setCat('${k}')">${v}</button>`
+  ).join('');
+}
+
+function setCat(c) { state.currentCat = c; renderCatPills(); }
+
+function renderPendingQuery() {
+  const q = state.pendingQuery;
+  const todayHtml = q ? queryHtml(q, 'query-answer', 'submitAnswer()', 'skipQuery()') : '';
+  el('pending-query-today').innerHTML = todayHtml;
+
+  let queryPanel = '';
+  if (q) {
+    queryPanel = queryHtml(q, 'query-answer2', 'submitAnswer()', 'skipQuery()');
+  } else {
+    queryPanel = `<div class="section" style="text-align:center;padding-top:24px">
+      <div class="empty-state">No pending query</div>
+      <div style="font-size:0.78rem;color:var(--lead);margin:12px 0">Next in <span style="color:var(--rust);font-family:'Source Code Pro',monospace" id="qpanel-next"></span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        ${Object.entries(CAT_LABELS).map(([k,v])=>`<button class="btn btn-secondary" onclick="fireQuery('${k}')">${v} — fire now</button>`).join('')}
+      </div>
+    </div>`;
+  }
+  el('query-panel-content').innerHTML = queryPanel;
+  if (!q) {
+    const np = el('qpanel-next');
+    if (np) {
+      const m = Math.floor(nextQuerySecs/60), s = nextQuerySecs%60;
+      np.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+  }
+}
+
+function queryHtml(q, inputId, submitFn, skipFn) {
+  return `<div class="query-alert" style="margin:12px;border-left-color:${CAT_COLORS[q.cat]}">
+    <div class="query-label" style="color:${CAT_COLORS[q.cat]}">${CAT_LABELS[q.cat]} — ${q.time}</div>
+    <div class="query-text">${q.q}</div>
+    <textarea class="query-input" id="${inputId}" placeholder="Type your answer here..."></textarea>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="document.getElementById('query-answer').value=document.getElementById('${inputId}').value||'';${submitFn}">File It</button>
+      <button class="btn btn-secondary" onclick="${skipFn}">Skip</button>
+    </div>
+  </div>`;
+}
+
+function renderEntries() {
+  el('entries-head').textContent = `${state.entries.length} entries today`;
+  el('badge-today').textContent = state.entries.length;
+  const preview = state.entries.slice(0, 3);
+  el('entries-preview').innerHTML = preview.map(entryCard).join('');
+  el('view-all-btn').style.display = state.entries.length > 3 ? 'block' : 'none';
+  el('view-all-btn').textContent = `View all ${state.entries.length} entries →`;
+  el('gen-btn-wrap').style.display = state.entries.length > 0 ? 'block' : 'none';
+
+  // daily fact / cryptic
+  el('daily-fact').textContent = state.dailyFact;
+  el('cryptic-clue').textContent = state.crypticClue.clue;
+  el('cryptic-answer').textContent = 'Answer: ' + state.crypticClue.answer;
+}
+
+function entryCard(e) {
+  return `<div class="entry-card" style="border-left-color:${CAT_COLORS[e.cat]}">
+    <div class="entry-time">${e.time}${e.manual?' <span class="tag-inline">manual</span>':''}</div>
+    <span class="entry-cat" style="color:${CAT_COLORS[e.cat]}">${CAT_LABELS[e.cat]}</span>
+    ${e.question !== 'Manual note' ? `<div class="entry-q">${e.question}</div>` : ''}
+    <div class="entry-a">${e.answer}</div>
+  </div>`;
+}
+
+function renderLog() {
+  el('log-head').textContent = `All entries — ${todayKey()} (${state.entries.length})`;
+  el('log-entries').innerHTML = state.entries.length
+    ? state.entries.map(entryCard).join('')
+    : '<div class="empty-state">Nothing filed yet today.</div>';
+}
+
+function renderMindmap() {
+  const groups = [
+    { key:'people', label:'👤 People', icon:'' },
+    { key:'places', label:'📍 Places', icon:'' },
+    { key:'dates',  label:'📅 Dates',  icon:'' },
+    { key:'projects', label:'🔧 Projects', icon:'' },
+  ];
+  el('entity-grid').innerHTML = groups.map(g => `
+    <div class="entity-group">
+      <div class="entity-group-title">${g.label} (${(state.entities[g.key]||[]).length})</div>
+      ${(state.entities[g.key]||[]).length === 0
+        ? '<span style="font-family:\'Source Code Pro\',monospace;font-size:0.6rem;color:var(--ghost)">none yet</span>'
+        : (state.entities[g.key]||[]).map(t =>
+            `<span class="entity-tag" onclick="prefillNote('${t.replace(/'/g,'')}')">${t}</span>`
+          ).join('')
+      }
+    </div>
+  `).join('');
+}
+
+function prefillNote(tag) {
+  el('quick-input').value = `Tell me more about: ${tag} — `;
+  switchTab('today');
+  el('quick-input').focus();
+}
+
+function renderBlog() {
+  if (state.blogDraft) {
+    el('blog-empty').style.display = 'none';
+    el('blog-preview').style.display = 'block';
+    el('blog-preview').textContent = state.blogDraft;
+    el('blog-btns').style.display = 'flex';
+    el('regen-btn').style.display = 'block';
+  } else {
+    el('blog-empty').style.display = 'block';
+    el('blog-preview').style.display = 'none';
+    el('blog-btns').style.display = 'none';
+    el('regen-btn').style.display = 'none';
+    el('gen-btn2').disabled = state.entries.length === 0;
+  }
+  el('blog-head').textContent = 'Draft Entry — ' + todayKey();
+}
+
+function renderSettings() {
+  const mins = state.settings.minMins || 20;
+  const maxs = state.settings.maxMins || 60;
+  el('min-slider').value = mins;
+  el('min-label').textContent = mins + ' mins';
+  el('max-slider').value = maxs;
+  el('max-label').textContent = maxs + ' mins';
+  el('conn-status').textContent = navigator.onLine ? 'Online' : 'Offline';
+}
+
+function renderCatToggles() {
+  el('cat-toggles').innerHTML = Object.entries(CAT_LABELS).map(([k,v]) => `
+    <div class="setting-row">
+      <div class="setting-label">${v}</div>
+      <button class="toggle${state.settings.cats[k]!==false?' on':''}" onclick="toggleCat('${k}')"></button>
+    </div>
+  `).join('');
+}
+
+function toggleCat(k) {
+  state.settings.cats[k] = state.settings.cats[k] === false ? true : false;
+  renderCatToggles();
+  save();
+}
+
+function toggleAnswer() {
+  state.answerShown = !state.answerShown;
+  el('cryptic-answer').style.display = state.answerShown ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  el('panel-'+id).classList.add('active');
+  document.querySelector(`[data-tab="${id}"]`)?.classList.add('active');
+  if (id === 'mindmap') renderMindmap();
+  if (id === 'query') renderPendingQuery();
+}
+
+// ════════════════════════════════════════════════════════════
+// SETTINGS HELPERS
+// ════════════════════════════════════════════════════════════
+function updateSetting(key, val) {
+  state.settings[key] = parseInt(val);
+  el('min-label').textContent = state.settings.minMins + ' mins';
+  el('max-label').textContent = state.settings.maxMins + ' mins';
+  scheduleNext();
+  save();
+}
+
+function clearToday() {
+  if (!confirm('Clear today\'s entries? Cannot be undone.')) return;
+  state.entries = [];
+  state.blogDraft = '';
+  dbDel('entries-'+todayKey());
+  dbDel('blog-'+todayKey());
+  renderAll();
+}
+
+function clearAll() {
+  if (!confirm('CLEAR ALL DATA — entries, entities, settings? This cannot be undone.')) return;
+  state.entries = [];
+  state.entities = { people:[], places:[], dates:[], projects:[] };
+  state.blogDraft = '';
+  state.settings = { minMins:20, maxMins:60, cats:{} };
+  ['entries-'+todayKey(),'entities','settings','blog-'+todayKey()].forEach(k => dbDel(k));
+  renderAll();
+}
+
+function exportData() {
+  const data = {
+    exported: new Date().toISOString(),
+    entries: state.entries,
+    entities: state.entities,
+    settings: state.settings,
+    blogDraft: state.blogDraft,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `blogprompt-backup-${todayKey()}.json`;
+  a.click();
+}
+
+function importData() { el('import-file').click(); }
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.entries) state.entries = data.entries;
+      if (data.entities) state.entities = data.entities;
+      if (data.settings) state.settings = { ...state.settings, ...data.settings };
+      if (data.blogDraft) state.blogDraft = data.blogDraft;
+      await save();
+      renderAll();
+      alert('Backup imported successfully.');
+    } catch(err) {
+      alert('Import failed — invalid file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ════════════════════════════════════════════════════════════
+// PWA INSTALL
+// ════════════════════════════════════════════════════════════
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  el('install-banner').style.display = 'block';
+});
+
+el('do-install').addEventListener('click', () => {
+  if (deferredInstall) {
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(() => {
+      el('install-banner').style.display = 'none';
+      deferredInstall = null;
+    });
+  }
+});
+
+el('dismiss-install').addEventListener('click', () => {
+  el('install-banner').style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+  el('install-banner').style.display = 'none';
+});
+
+// ════════════════════════════════════════════════════════════
+// ONLINE/OFFLINE
+// ════════════════════════════════════════════════════════════
+window.addEventListener('online', () => { renderDateline(); renderSettings(); });
+window.addEventListener('offline', () => { renderDateline(); renderSettings(); });
+
+// ════════════════════════════════════════════════════════════
+// SERVICE WORKER REGISTRATION
+// ════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW reg failed', err));
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+openDB().then(async () => {
+  await loadData();
+  renderAll();
+  scheduleNext();
+}).catch(err => {
+  console.error('DB open failed', err);
+  renderAll();
+  scheduleNext();
+});
+</script>
+</body>
+</html>
