@@ -1,22 +1,14 @@
-// BlogPrompt+ Service Worker v1.0
-const CACHE = 'blogprompt-v1';
-const OFFLINE_URLS = [
-  '/',
-  '/index.html',
-  'https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Special+Elite&family=Source+Code+Pro:wght@400;600&display=swap',
-];
+// BlogPrompt+ Service Worker v2.0
+const CACHE = 'blogprompt-v2';
 
-// Install — cache core assets
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache => {
-      return cache.addAll(['/index.html']).catch(() => {});
-    })
+    caches.open(CACHE).then(cache => cache.addAll(['/blogprompt/index.html', '/blogprompt/']))
+      .catch(() => caches.open(CACHE).then(c => c.addAll(['/index.html'])))
   );
   self.skipWaiting();
 });
 
-// Activate — clean old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -26,49 +18,63 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — cache-first for app shell, network-first for API
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
-
-  // Always pass API calls through — never cache
   if (url.hostname === 'api.anthropic.com') {
     event.respondWith(
       fetch(event.request).catch(() =>
         new Response(JSON.stringify({
-          error: 'offline',
-          content: [{ text: 'Offline — blog generation requires internet. Your entries are saved safely. Try again when connected.' }]
+          content: [{ text: 'Offline — blog generation needs internet. Entries are saved. Try again when connected.' }]
         }), { headers: { 'Content-Type': 'application/json' } })
       )
     );
     return;
   }
-
-  // For Google Fonts — cache then network
-  if (url.hostname.includes('fonts.g')) {
-    event.respondWith(
-      caches.match(event.request).then(cached => {
-        if (cached) return cached;
-        return fetch(event.request).then(response => {
-          const clone = response.clone();
-          caches.open(CACHE).then(c => c.put(event.request, clone));
-          return response;
-        }).catch(() => cached || new Response(''));
-      })
-    );
-    return;
-  }
-
-  // App shell — cache first
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
       return fetch(event.request).then(response => {
-        if (response && response.status === 200) {
+        if (response && response.status === 200 && !url.hostname.includes('api.')) {
           const clone = response.clone();
           caches.open(CACHE).then(c => c.put(event.request, clone));
         }
         return response;
-      }).catch(() => caches.match('/index.html'));
+      }).catch(() => caches.match('/blogprompt/index.html') || caches.match('/index.html'));
     })
   );
+});
+
+// ── NOTIFICATION HANDLER
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes('blogprompt') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow('/blogprompt/');
+    })
+  );
+});
+
+// ── SCHEDULED QUERY ALARM (via postMessage from app)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'FIRE_NOTIFICATION') {
+    const { title, body } = event.data;
+    self.registration.showNotification(title || 'BlogPrompt+ Query', {
+      body: body || 'Time to log something — tap to answer.',
+      icon: '/blogprompt/icon-192.png',
+      badge: '/blogprompt/icon-192.png',
+      tag: 'blogprompt-query',
+      renotify: true,
+      requireInteraction: false,
+      vibrate: [100, 50, 100],
+      actions: [
+        { action: 'open', title: 'Answer Now' },
+        { action: 'skip', title: 'Skip' }
+      ]
+    });
+  }
 });

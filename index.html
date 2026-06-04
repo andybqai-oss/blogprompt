@@ -586,6 +586,13 @@
       <div id="cat-toggles"></div>
 
       <hr class="divider"/>
+      <div class="section-head">Notifications</div>
+      <div style="font-family:'Libre Baskerville',serif;font-size:0.75rem;color:var(--lead);line-height:1.7;padding:8px 0">
+        Allow notifications so queries pop up even when the app is in the background or your screen is off.
+      </div>
+      <button class="btn btn-secondary btn-full" id="notif-btn" onclick="requestNotificationPermission()">🔔 Enable Notifications</button>
+
+      <hr class="divider"/>
       <div class="section-head">Data & Backup</div>
       <div class="setting-row">
         <div>
@@ -895,8 +902,47 @@ function fireQuery(cat) {
   el('badge-query').style.display = 'inline';
   el('badge-query').textContent = '!';
   scheduleNext();
-  // vibrate if supported
   if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+  // Fire system notification so alert works even if app is in background
+  sendNotification(CAT_LABELS[c] + ' — Query Ready', q);
+}
+
+function sendNotification(title, body) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'FIRE_NOTIFICATION', title, body });
+    } else {
+      new Notification(title, { body, icon: 'icon-192.png', tag: 'blogprompt-query', renotify: true });
+    }
+  }
+}
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    renderNotifBtn();
+    if (perm === 'granted') sendNotification('BlogPrompt+ Active', 'Queries will now alert you throughout the day.');
+  }
+}
+
+function renderNotifBtn() {
+  const btn = el('notif-btn');
+  if (!btn) return;
+  if (!('Notification' in window)) { btn.style.display = 'none'; return; }
+  if (Notification.permission === 'granted') {
+    btn.textContent = '🔔 Notifications On';
+    btn.classList.add('btn-primary');
+    btn.classList.remove('btn-secondary');
+    btn.disabled = true;
+  } else if (Notification.permission === 'denied') {
+    btn.textContent = '🔕 Notifications Blocked';
+    btn.disabled = true;
+  } else {
+    btn.textContent = '🔔 Enable Notifications';
+    btn.disabled = false;
+  }
 }
 
 function submitAnswer() {
@@ -1327,7 +1373,14 @@ if ('serviceWorker' in navigator) {
 openDB().then(async () => {
   await loadData();
   renderAll();
+  renderNotifBtn();
   scheduleNext();
+  // Auto-request notifications after 3 seconds if not yet decided
+  setTimeout(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      requestNotificationPermission();
+    }
+  }, 3000);
 }).catch(err => {
   console.error('DB open failed', err);
   renderAll();
